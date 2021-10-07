@@ -21,8 +21,7 @@ import (
 )
 
 const (
-	StatusOK       = 200
-	StatusNotFound = 404
+	StatusOK = 200
 )
 
 func main() {
