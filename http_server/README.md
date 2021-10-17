@@ -2,7 +2,10 @@
 
 - 构建本地镜像。
 
-`docker build -t my_cncamp/http_server:huangsiyi_v0.0 .`
+```
+GOOS=linux GOARCH=amd64 go build -o bin/linux/httpserver
+docker build -t my_cncamp/http_server:huangsiyi_v0.0 .
+```
 
 - 编写 Dockerfile 将练习 2.2 编写的 httpserver 容器化（请思考有哪些最佳实践可以引入到 Dockerfile 中来）。
 
@@ -18,12 +21,16 @@
 
 - 通过 Docker 命令本地启动 httpserver。
     
-`docker run -d -p --name httpserver 80:800 my_cncamp/http_server:huangsiyi_v0.0`
+`docker run -d --name httpserver -p 80:800 my_cncamp/http_server:huangsiyi_v0.0`
 
 - 通过 nsenter 进入容器查看 IP 配置。
 
 ```bash
 docker ps|grep httpserver
-docker inspect <containerid>
+docker inspect <containerid>|grep -i pid
 nsenter -t <pid> -n ip a
+
+// 查看http server
+curl 127.0.0.1/800
+curl 127.0.0.1/healthz/800
 ```
