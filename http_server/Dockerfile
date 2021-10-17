@@ -1,4 +1,4 @@
 FROM ubuntu
-ADD bin/amd64/httpserver /httpserver
+ADD bin/linux_amd64 /httpserver
 EXPOSE 800
 ENTRYPOINT /httpserver
