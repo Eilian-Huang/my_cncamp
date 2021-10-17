@@ -1,10 +1,10 @@
 FROM golang:1.16-alpine AS build
-WORKDIR /httpserver
+WORKDIR /builder
 COPY . .
 RUN apk update && go mod download && GOOS=linux GOARCH=amd64 go build -o bin/linux/httpserver
 
 FROM alpine
-WORKDIR /httpserver
-COPY --from=build /httpserver /httpserver
+WORKDIR /bin/linux/httpserver
+COPY --from=build builder/bin/linux/httpserver .
 EXPOSE 800
-ENTRYPOINT ["/httpserver"]
+ENTRYPOINT ["./httpserver"]
