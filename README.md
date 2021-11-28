@@ -7,7 +7,7 @@
 2. [HTTP Server](##2.HTTPServer)
    1. [代码实现](###2.1HTTPServer)
    2. [Docker容器化](###2.2HTTP Server容器化)
-   3. [Kubernetes部署](###2.3-Kubernetes部署)
+   3. [Kubernetes部署](###2.3-kubernetes部署)
 
 ## 1. Go语言练习
 
