@@ -1,5 +1,7 @@
 # my_cncamp
 
+[1. Go语言练习](##1.Go语言练习)
+
 ## 1. Go语言练习1.1
 
 [练习1.1 Code](practice_1_1/main.go)
