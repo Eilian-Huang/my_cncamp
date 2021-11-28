@@ -16,7 +16,7 @@ spec:
       containers:
         - name: httpserver
           image: eilianhuang/cncamp:http_server_v1.0
-          # 资源需求
+          # 资源需求，QoS Class: Burstable
           resources:
             limits:
               cpu: 200m
@@ -24,6 +24,16 @@ spec:
             requests:
               cpu: 100m
               memory: 50Mi
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 5
+            failureThreshold: 10
+            successThreshold: 1
+            periodSeconds: 5
+            timeoutSeconds: 1
           # 就绪探针
           readinessProbe:
             httpGet:
@@ -40,8 +50,8 @@ spec:
             initialDelaySeconds: 20
             periodSeconds: 10
             timeoutSeconds: 5
-            successThreshold: 2
-            failureThreshold: 2
+            successThreshold: 1
+            failureThreshold: 1
           env:
             - name: VERSION
               value: 1.0.1
@@ -54,9 +64,81 @@ spec:
             preStop:
               exec:
                 command: [ "killall httpserver" ]
-  # Qos
+          # 配置和代码分离
+          envFrom:
+            - configMapRef:
+                name: httpserver-configmap
+            - secretRef:
+                name: httpserver-secret
+      # 配置亲和性 保证多个pod不调度到同一个节点
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: "app"
+                    operator: In
+                    values:
+                      - httpserver
+              topologyKey: "kubernetes.io/hostname"
   strategy:
     rollingUpdate:
       maxSurge: 2
       maxUnavailable: 1
     type: RollingUpdate
+---
+# NodePort Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudnative-httpserver
+spec:
+  type: NodePort
+  externalTrafficPolicy: Cluster
+  ports:
+    - nodePort: 800
+      targetPort: 80
+      port: 80
+      protocol: TCP
+  selector:
+    app: httpserver
+---
+# ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: httpserver-configmap
+data:
+  VERSION_CONFIGMAP: "1.0.1-configmap"
+---
+# Secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: httpserver-secret
+type: Opaque
+data:
+  # echo -n '1.0.1' | base64
+  VERSION_SECRET: MS4wLjE=
+---
+#Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: httpserver-ingress
+spec:
+  tls:
+    - hosts:
+        -  cncamp.httpserver.com
+      secretName: httpserver-ingress-tls
+  rules:
+    - host: "cncamp.httpserver.com"
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: httpserver
+                port:
+                  number: 80

@@ -86,17 +86,24 @@ $ curl 127.0.0.1:800/healthz
 
 > 编写 Kubernetes 部署脚本将 httpserver 部署到 kubernetes 集群
 >> 思考维度
->>> - [x] 优雅启动
->>> - [x] 优雅终止 
->>> - [x] 资源需求和 QoS 保证 
->>> - [x] 探活 
->>> - [x] 日常运维需求，日志等级 
->>> - [ ] 配置和代码分离
+>>> - [x] 优雅启动：启动探针和就绪探针
+>>> - [x] 优雅终止：preStop
+>>> - [x] 资源需求和 QoS 保证：Qos为Burstable
+>>> - [x] 探活：存活探针
+>>> - [x] 日常运维需求，日志等级：日志等级
+>>> - [x] 配置和代码分离：env、secret和configmap
 > 
 >> 更加完备的部署spec，将服务发布给集群外部的调用方
->>> - [ ] Service 
+>>> - [x] Service：NodePort
 >>> - [ ] Ingress
 > 
 >> 可以考虑的细节
->>> - [ ] 如何确保整个应用的高可用 
->>> - [ ] 如何通过证书保证 httpServer 的通讯安全
+>>> - [x] 如何确保整个应用的高可用：多副本、亲和性
+>>> - [x] 如何通过证书保证 httpServer 的通讯安全
+
+- 使用yaml文件部署http server到kubernetes
+```bash
+$ kubectl apply -f httpserver-deploy.yaml
+
+deployment.apps/httpserver created
+```
