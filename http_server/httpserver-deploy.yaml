@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpserver
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: httpserver
+  template:
+    metadata:
+      labels:
+        app: httpserver
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: httpserver
+          image: eilianhuang/cncamp:http_server_v1.0
+          # 资源需求
+          resources:
+            limits:
+              cpu: 200m
+              memory: 100Mi
+            requests:
+              cpu: 100m
+              memory: 50Mi
+          # 就绪探针
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            successThreshold: 2
+          # 存活探针
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 2
+            failureThreshold: 2
+          env:
+            - name: VERSION
+              value: 1.0.1
+          # 日志
+          args:
+            - -v=2
+            - --logtostderr
+          # 优雅终止
+          lifecycle:
+            preStop:
+              exec:
+                command: [ "killall httpserver" ]
+  # Qos
+  strategy:
+    rollingUpdate:
+      maxSurge: 2
+      maxUnavailable: 1
+    type: RollingUpdate

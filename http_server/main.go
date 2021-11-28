@@ -13,11 +13,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"log"
+	"github.com/golang/glog"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 )
 
 const (
@@ -25,17 +29,34 @@ const (
 )
 
 func main() {
-	fmt.Printf("----- http server start -----")
 	os.Setenv("VERSION", "1.00") // 设置当前系统环境VERSION为1.00
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", defaultHandler)        // 当访问localhost时
 	mux.HandleFunc("/healthz", healthzHandler) // 当访问 localhost/healthz 时
-
-	err := http.ListenAndServe(":800", mux)
-	if err != nil {
-		log.Fatal(err)
+	srv := http.Server{
+		Addr:    ":80",
+		Handler: mux,
 	}
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			glog.Fatalf("Http Server Listen: %s\n", err)
+		}
+	}()
+	glog.V(2).Info("----- Http Server Start -----")
+	<-sig
+	// 接收停止信号后优雅终止
+	glog.V(2).Info("----- Http Server Stop -----")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		glog.Fatalf("Server Shutdown Failed:%+v", err)
+	}
+	glog.V(2).Info("Server Exited Properly")
 }
 
 func defaultHandler(w http.ResponseWriter, req *http.Request) {

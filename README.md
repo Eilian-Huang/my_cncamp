@@ -1,13 +1,24 @@
 # my_cncamp
 
-## 1. Go语言练习1.1
+## 目录
+1. [Go语言练习](##1.Go语言练习)  
+   1. [基础练习](###1.1基础练习)  
+   2. [生产者-消费者模型](###1.2生产者-消费者模型)  
+2. [HTTP Server](##2.HTTP Server)
+   1. [代码实现](###2.1HTTP Server)
+   2. [Docker容器化](###2.2HTTP Server容器化)
+   3. [Kubernetes部署](###2.3Kubernetes部署)
+
+## 1. Go语言练习
+
+### 1.1 基础练习
 
 [练习1.1 Code](practice_1_1/main.go)
 
 1. 编写一个小程序 给定一个字符串数组`["I","am","stupid","and","weak"]` 
 2. 用 for 循环遍历该数组并修改为`["I","am","smart","and","strong"]`
 
-## 2. Go语言练习1.2：生产者-消费者模型
+### 1.2 生产者-消费者模型
 
 [练习1.2 Code](practice_1_2/main.go)
 
@@ -16,7 +27,11 @@
 3. 生产者：每1秒往队列中放入一个类型为 int 的元素，队列满时生产者可以阻塞
 4. 消费者：每一秒从队列中获取一个元素并打印，队列为空时消费者阻塞
 
-## 3. HTTP Server
+### 1.3 多个生产者和多个消费者模式
+
+## 2. HTTP Server
+
+### 2.1 HTTP Server
 
 [Http Server Code](http_server/main.go)
 
@@ -25,13 +40,13 @@
 3. Server 端记录访问日志包括客户端 IP，HTTP 返回码，输出到 server 端的标准输出
 4. 当访问 localhost/healthz 时，应返回200
 
-## 4. HTTP Server容器化
+### 2.2 HTTP Server容器化
 
 - 构建本地镜像。
 
 ```bash
 $ GOOS=linux GOARCH=amd64 go build -o bin/linux/httpserver
-$ docker build -t my_cncamp/http_server:huangsiyi_v0.0 .
+$ docker build -t http_server_v1.0 .
 ```
 
 - 编写 Dockerfile 将练习 2.2 编写的 httpserver 容器化（请思考有哪些最佳实践可以引入到 Dockerfile 中来）。
@@ -45,23 +60,43 @@ $ docker build -t my_cncamp/http_server:huangsiyi_v0.0 .
 - 将镜像推送至 Docker 官方镜像仓库。
 
 ```bash
-$ docker push my_cncamp/http_server:huangsiyi_v0.0
+$ docker tag http_server_v1.0 eilianhuang/cncamp:http_server_v1.0
+$ docker push eilianhuang/cncamp:http_server_v1.0
 ```
 
 - 通过 Docker 命令本地启动 httpserver。
 
 ```bash
-docker run -d --name httpserver -p 80:800 my_cncamp/http_server:huangsiyi_v0.0
+$ docker run -d --name httpserver -p 800:80 eilianhuang/cncamp:http_server_v1.0
 ```
 
 - 通过 nsenter 进入容器查看 IP 配置。
 
 ```bash
-docker ps|grep httpserver
-docker inspect <containerid>|grep -i pid
-nsenter -t <pid> -n ip a
+$ docker ps|grep httpserver
+$ docker inspect <containerid>|grep -i pid
+$ nsenter -t <pid> -n ip a
 
 // 查看http server
-curl 127.0.0.1/800
-curl 127.0.0.1/healthz/800
+$ curl 127.0.0.1:800
+$ curl 127.0.0.1:800/healthz
 ```
+
+### 2.3 Kubernetes部署
+
+> 编写 Kubernetes 部署脚本将 httpserver 部署到 kubernetes 集群
+>> 思考维度
+>>> - [x] 优雅启动
+>>> - [x] 优雅终止 
+>>> - [x] 资源需求和 QoS 保证 
+>>> - [x] 探活 
+>>> - [x] 日常运维需求，日志等级 
+>>> - [ ] 配置和代码分离
+> 
+>> 更加完备的部署spec，将服务发布给集群外部的调用方
+>>> - [ ] Service 
+>>> - [ ] Ingress
+> 
+>> 可以考虑的细节
+>>> - [ ] 如何确保整个应用的高可用 
+>>> - [ ] 如何通过证书保证 httpServer 的通讯安全

@@ -6,5 +6,5 @@ RUN apk update && go mod download && GOOS=linux GOARCH=amd64 go build -o bin/lin
 FROM alpine
 WORKDIR /bin/linux/httpserver
 COPY --from=build builder/bin/linux/httpserver .
-EXPOSE 800
+EXPOSE 80
 ENTRYPOINT ["./httpserver"]
