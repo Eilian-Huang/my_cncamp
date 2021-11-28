@@ -27,7 +27,7 @@ spec:
           startupProbe:
             httpGet:
               path: /healthz
-              port: http
+              port: 80
               scheme: HTTP
             initialDelaySeconds: 5
             failureThreshold: 10
@@ -91,12 +91,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: cloudnative-httpserver
+  name: httpserver
 spec:
   type: NodePort
   externalTrafficPolicy: Cluster
   ports:
-    - nodePort: 800
+    - nodePort: 30080
       targetPort: 80
       port: 80
       protocol: TCP
