@@ -1,13 +1,13 @@
 # my_cncamp
 
 ## 目录
-1. [Go语言练习](##1.Go语言练习)  
-   1. [基础练习](###1.1基础练习)  
-   2. [生产者-消费者模型](###1.2生产者-消费者模型)  
-2. [HTTP Server](##2.HTTPServer)
-   1. [代码实现](###2.1HTTPServer)
-   2. [Docker容器化](###2.2HTTP Server容器化)
-   3. [Kubernetes部署](###2.3Kubernetes部署)
+1. [Go语言练习](#1-Go语言练习)  
+   1. [基础练习](#11-基础练习)  
+   2. [生产者-消费者模型](#12-生产者-消费者模型)  
+2. [HTTP Server](#2-http-server)
+   1. [代码实现](#21-http-server)
+   2. [Docker容器化](#22-http-server容器化)
+   3. [Kubernetes部署](#23-kubernetes部署)
 
 ## 1. Go语言练习
 
