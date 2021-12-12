@@ -110,3 +110,80 @@ deployment.apps/httpserver created
 ```
 
 ### 2.4 为Http Server添加监控
+
+> - [x] 在Http Server添加0-2秒的随机延时
+> - [x] 在Http Server添加延时Metric
+> - [x] 在Prometheus界面中查询延时指标数据
+> - [x] 创建一个Grafana Dashboard展现延时分配情况
+
+* 安装loki、Grafana和Prometheus
+```shell
+
+```
+* 暴露Grafana和Prometheus并访问 
+
+将type: ClusterIP改为NodePort
+```shell
+$ kubectl edit svc loki-grafana
+
+apiVersion: v1
+kind: Service
+metadata:
+  ...
+spec:
+  ...
+  type: NodePort
+...
+
+$ kubectl edit svc loki-prometheus-server
+
+apiVersion: v1
+kind: Service
+metadata:
+  ...
+spec:
+  ...
+  type: NodePort
+...
+```
+查看 grafana 的登录密码
+```shell
+$ kubectl get secret --namespace default loki-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+```
+查看端口并登陆Grafana和Prometheus
+```shell
+$ kubectl get pod
+loki-grafana                    NodePort    10.107.231.131   <none>        80:31780/TCP   24h
+loki-prometheus-server          NodePort    10.106.247.155   <none>        80:30529/TCP   24h
+```
+
+* 在Http Server添加0-2秒的随机延时
+```go
+
+```
+* 在Http Server添加延时Metric
+* 在Deployment添加Prometheus发现
+```yaml
+...
+spec:
+  ...
+  template:
+    metadata:
+      ...
+      # prometheus
+      annotations:
+        prometheus.io/port: http-metrics
+        prometheus.io/scrape: "true"
+    spec:
+      ...
+      containers:
+        - name: httpserver
+          image: eilianhuang/cncamp:http_server_v1.0
+          # prometheus ports
+          ports:
+            - containerPort: 80
+              name: http-metrics
+              protocol: TCP
+```
+* 在Prometheus界面中查询延时指标数据
+* 创建一个Grafana Dashboard展现延时分配情况

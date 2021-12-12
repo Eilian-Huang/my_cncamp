@@ -15,13 +15,16 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/golang/glog"
 	"net/http"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/golang/glog"
+	"https://github.com/Siyi-Huang/my_cncamp/http_server/metrics"
 )
 
 const (
