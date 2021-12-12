@@ -78,7 +78,7 @@ $ docker ps|grep httpserver
 $ docker inspect <containerid>|grep -i pid
 $ nsenter -t <pid> -n ip a
 
-// 查看http server
+# 查看http server
 $ curl 127.0.0.1:800
 $ curl 127.0.0.1:800/healthz
 ```
@@ -96,7 +96,7 @@ $ curl 127.0.0.1:800/healthz
 > 
 >> 更加完备的部署spec，将服务发布给集群外部的调用方
 >>> - [x] Service：NodePort
->>> - [ ] Ingress
+>>> - [x] Ingress
 > 
 >> 可以考虑的细节
 >>> - [x] 如何确保整个应用的高可用：多副本、亲和性
@@ -115,15 +115,36 @@ deployment.apps/httpserver created
 > - [x] 在Http Server添加延时Metric
 > - [x] 在Prometheus界面中查询延时指标数据
 > - [x] 创建一个Grafana Dashboard展现延时分配情况
+ 
+[Http Server code](http_server/main.go)  
+[Deployment yaml](http_server/httpserver-deploy.yaml)
 
 * 安装loki、Grafana和Prometheus
-```shell
+```bash
+# 增加grafana源，并更新
+$ helm repo add grafana https://grafana.github.io/helm-charts
+$ helm repo update
 
+# 安装出错
+$ helm upgrade --install loki grafana/loki-stack --set grafana.enabled=true,prometheus.enabled=true,prometheus.alertmanager.persistentVolume.enabled=false,prometheus.server.persistentVolume.enabled=false
+Release "loki" does not exist. Installing it now.
+Error: unable to build kubernetes objects from release manifest: [unable to recognize "": no matches for kind "ClusterRole" in version "rbac.authorization.k8s.io/v1beta1", unable to recognize "": no matches for kind "ClusterRoleBinding" in version "rbac.authorization.k8s.io/v1beta1"]
+
+# 下载到本地
+$ helm pull grafana/loki-stack 
+$ tar -xvf loki-stack-2.5.0.tgz
+$ cd loki-stack/
+
+# 替换所有的 rbac.authorization.k8s.io/v1beta1 为 rbac.authorization.k8s.io/v1
+$ sed -i "s#rbac.authorization.k8s.io/v1beta1#rbac.authorization.k8s.io/v1#g" `grep -rl "rbac.authorization.k8s.io/v1beta1" ./`
+
+# 从本地目录安装
+$ helm upgrade --install loki ./loki-stack --set grafana.enabled=true,prometheus.enabled=true,prometheus.alertmanager.persistentVolume.enabled=false,prometheus.server.persistentVolume.enabled=false
 ```
 * 暴露Grafana和Prometheus并访问 
 
 将type: ClusterIP改为NodePort
-```shell
+```bash
 $ kubectl edit svc loki-grafana
 
 apiVersion: v1
@@ -203,16 +224,17 @@ spec:
               protocol: TCP
 ```
 * 重新打包docker镜像并修改Deployment镜像tag
-```shell
+```bash
 $ docker tag http_server_v2.1 eilianhuang/cncamp:http_server_v2.1
 $ docker push eilianhuang/cncamp:http_server_v2.1
 ```
-* 查看是否有metrics打印
-```shell
+* 手动访问几次，然后查看是否有metrics打印
+```bash
 $ kubectl get po -owide
 NAME                                           READY   STATUS    RESTARTS      AGE   IP                NODE     NOMINATED NODE   READINESS GATES
 httpserver-7965cd4dc-9fzmg                     0/1     Running   0             21s   192.168.216.248   cncamp   <none>           <none>
 
+$ curl 192.168.216.248
 $ curl 192.168.216.248:80/metrics
 # HELP go_gc_duration_seconds A summary of the pause duration of garbage collection cycles.
 # TYPE go_gc_duration_seconds summary
@@ -226,4 +248,12 @@ go_gc_duration_seconds_count 0
 ...
 ```
 * 在Prometheus界面中查询延时指标数据
+![prometheus](images/prometheus.png)
 * 创建一个Grafana Dashboard展现延时分配情况
+>Explore -> Prometheus -> 选择指标（如：hs_exec_latency_seconds_bucket{})
+
+![grafana_prometheus](images/grafana_prometheus.png)
+
+> Dashboards -> Manage -> Import 将grafana-dashboard目录下的 httpserver-latency.json 导入
+
+![grafana_dashboard](images/grafana_dashboard.png)
