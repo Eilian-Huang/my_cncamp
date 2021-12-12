@@ -11,11 +11,20 @@ spec:
     metadata:
       labels:
         app: httpserver
+      # prometheus
+      annotations:
+        prometheus.io/port: http-metrics
+        prometheus.io/scrape: "true"
     spec:
       terminationGracePeriodSeconds: 60
       containers:
         - name: httpserver
           image: eilianhuang/cncamp:http_server_v1.0
+          # prometheus ports
+          ports:
+            - containerPort: 80
+              name: http-metrics
+              protocol: TCP
           # 资源需求，QoS Class: Burstable
           resources:
             limits:

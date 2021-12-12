@@ -8,6 +8,7 @@
    1. [代码实现](#21-http-server)
    2. [Docker容器化](#22-http-server容器化)
    3. [Kubernetes部署](#23-kubernetes部署)
+   4. [Prometheus监控](#24-为http-server添加监控)
 
 ## 1. Go语言练习
 
@@ -82,8 +83,8 @@ $ curl 127.0.0.1:800
 $ curl 127.0.0.1:800/healthz
 ```
 
-### 2.3 Kubernetes部署
-
+### 2.3 Kubernetes部署  
+[Deployment yaml](http_server/httpserver-deploy.yaml)
 > 编写 Kubernetes 部署脚本将 httpserver 部署到 kubernetes 集群
 >> 思考维度
 >>> - [x] 优雅启动：启动探针和就绪探针
@@ -107,3 +108,5 @@ $ kubectl apply -f httpserver-deploy.yaml
 
 deployment.apps/httpserver created
 ```
+
+### 2.4 为Http Server添加监控
