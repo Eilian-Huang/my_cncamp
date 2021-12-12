@@ -15,6 +15,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
@@ -22,9 +24,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/golang/glog"
-	"https://github.com/Siyi-Huang/my_cncamp/http_server/metrics"
+	"github.com/my_cncamp/http_server/metrics"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const (
@@ -37,6 +39,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", defaultHandler)        // 当访问localhost时
 	mux.HandleFunc("/healthz", healthzHandler) // 当访问 localhost/healthz 时
+	mux.Handle("/metrics", promhttp.Handler()) // prometheus metrics
 	srv := http.Server{
 		Addr:    ":80",
 		Handler: mux,
@@ -62,7 +65,18 @@ func main() {
 	glog.V(2).Info("Server Exited Properly")
 }
 
+func randInt(min int, max int) int {
+	rand.Seed(time.Now().UTC().UnixNano())
+	return min + rand.Intn(max-min)
+}
+
 func defaultHandler(w http.ResponseWriter, req *http.Request) {
+	glog.V(4).Info("entering root handler")
+	timer := metrics.NewTimer()
+	defer timer.ObserveTotal()
+	delay := randInt(0, 2000)
+	time.Sleep(time.Millisecond * time.Duration(delay))
+	io.WriteString(w, "===================Details of the http request header:============\n")
 
 	// 1. 接收客户端 request，并将 request 中带的 header 写入 response header
 	fmt.Fprintf(w, "Before write request header\n")

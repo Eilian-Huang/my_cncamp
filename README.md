@@ -159,9 +159,25 @@ loki-prometheus-server          NodePort    10.106.247.155   <none>        80:30
 
 * 在Http Server添加0-2秒的随机延时
 ```go
+func randInt(min int, max int) int {
+	rand.Seed(time.Now().UTC().UnixNano())
+	return min + rand.Intn(max-min)
+}
 
+func defaultHandler(w http.ResponseWriter, req *http.Request) {
+	glog.V(4).Info("entering root handler")
+	timer := metrics.NewTimer()
+	// 汇报指标
+	defer timer.ObserveTotal()
+	// 添加延迟
+	delay := randInt(0, 2000)
+	time.Sleep(time.Millisecond*time.Duration(delay))
+}
 ```
 * 在Http Server添加延时Metric
+```go
+mux.Handle("/metrics", promhttp.Handler())  // prometheus metrics
+```
 * 在Deployment添加Prometheus发现
 ```yaml
 ...
@@ -184,6 +200,11 @@ spec:
             - containerPort: 80
               name: http-metrics
               protocol: TCP
+```
+* 重新打包docker镜像并修改Deployment镜像tag
+```shell
+$ docker tag http_server_v1.0 eilianhuang/cncamp:http_server_v1.0
+$ docker push eilianhuang/cncamp:http_server_v1.0
 ```
 * 在Prometheus界面中查询延时指标数据
 * 创建一个Grafana Dashboard展现延时分配情况
