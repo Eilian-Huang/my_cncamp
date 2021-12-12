@@ -176,6 +176,7 @@ func defaultHandler(w http.ResponseWriter, req *http.Request) {
 ```
 * 在Http Server添加延时Metric
 ```go
+metrics.Register()
 mux.Handle("/metrics", promhttp.Handler())  // prometheus metrics
 ```
 * 在Deployment添加Prometheus发现
@@ -203,8 +204,26 @@ spec:
 ```
 * 重新打包docker镜像并修改Deployment镜像tag
 ```shell
-$ docker tag http_server_v1.0 eilianhuang/cncamp:http_server_v1.0
-$ docker push eilianhuang/cncamp:http_server_v1.0
+$ docker tag http_server_v2.1 eilianhuang/cncamp:http_server_v2.1
+$ docker push eilianhuang/cncamp:http_server_v2.1
+```
+* 查看是否有metrics打印
+```shell
+$ kubectl get po -owide
+NAME                                           READY   STATUS    RESTARTS      AGE   IP                NODE     NOMINATED NODE   READINESS GATES
+httpserver-7965cd4dc-9fzmg                     0/1     Running   0             21s   192.168.216.248   cncamp   <none>           <none>
+
+$ curl 192.168.216.248:80/metrics
+# HELP go_gc_duration_seconds A summary of the pause duration of garbage collection cycles.
+# TYPE go_gc_duration_seconds summary
+go_gc_duration_seconds{quantile="0"} 0
+go_gc_duration_seconds{quantile="0.25"} 0
+go_gc_duration_seconds{quantile="0.5"} 0
+go_gc_duration_seconds{quantile="0.75"} 0
+go_gc_duration_seconds{quantile="1"} 0
+go_gc_duration_seconds_sum 0
+go_gc_duration_seconds_count 0
+...
 ```
 * 在Prometheus界面中查询延时指标数据
 * 创建一个Grafana Dashboard展现延时分配情况

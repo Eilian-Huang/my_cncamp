@@ -36,6 +36,7 @@ const (
 func main() {
 	os.Setenv("VERSION", "1.00") // 设置当前系统环境VERSION为1.00
 
+	metrics.Register()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", defaultHandler)        // 当访问localhost时
 	mux.HandleFunc("/healthz", healthzHandler) // 当访问 localhost/healthz 时
@@ -74,7 +75,7 @@ func defaultHandler(w http.ResponseWriter, req *http.Request) {
 	glog.V(4).Info("entering root handler")
 	timer := metrics.NewTimer()
 	defer timer.ObserveTotal()
-	delay := randInt(0, 2000)
+	delay := randInt(10, 2000)
 	time.Sleep(time.Millisecond * time.Duration(delay))
 	io.WriteString(w, "===================Details of the http request header:============\n")
 
